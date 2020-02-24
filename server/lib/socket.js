@@ -32,9 +32,11 @@ module.exports = (server, app, sessionMiddleware) => {
             for(var i=0; i<result.length; i++) {
                 userList.push(result[i].dataValues);
             }
+            console.log('userData: ', userList);
             room.to(code).emit('userData', { userList: userList });
             
             const data = await db.getRoomSetting(code);
+            console.log('roomData: ', data.dataValues);
             room.to(code).emit('roomData', { roomData: data.dataValues });
         });
 
@@ -44,6 +46,7 @@ module.exports = (server, app, sessionMiddleware) => {
             const result = await db.setRoom(roomCode, round, time);
             const data = await db.getRoomSetting(roomCode);
 
+            console.log('roomData: ', data.dataValues);
             room.to(roomCode).emit('roomData', { roomData: data.dataValues });
         });
 
@@ -53,6 +56,7 @@ module.exports = (server, app, sessionMiddleware) => {
             const result = await db.setGameStart(roomCode, start);
             const data = await db.getRoomSetting(roomCode);
 
+            console.log('roomData: ', data.dataValues);
             room.to(roomCode).emit('roomData', { roomData: data.dataValues });
         });
 
@@ -68,6 +72,7 @@ module.exports = (server, app, sessionMiddleware) => {
             for(var i=0; i<result.length; i++) {
                 userList.push(result[i].dataValues);
             }
+            console.log('readyUserData: ', userList);
             room.to(roomCode).emit('readyUserData', { userList: userList });
         });
 
@@ -101,6 +106,7 @@ module.exports = (server, app, sessionMiddleware) => {
             for(var i=0; i<result.length; i++) {
                 userList.push(result[i].dataValues);
             }
+            console.log('updateScore userData: ', userList);
             room.to(roomCode).emit('updateScore', { userList: userList });
         });
 
@@ -111,16 +117,20 @@ module.exports = (server, app, sessionMiddleware) => {
             const roomCode = req.session.roomCode;
 
             socket.leave(roomCode);
+            console.log('leave room ', roomCode, '!');
 
             const deleteUser = await db.deleteUser(name, roomCode);
+            console.log('delete user: ', name);
             const result = await db.getUsersInRoom(roomCode);
             if(result.length === 0) {
                 const deleteRoom = await db.deleteRoom(roomCode);
+                console.log('delete room: ', roomCode);
             } else {
                 let userList = [];
                 for(var i=0; i<result.length; i++) {
                     userList.push(result[i].dataValues);
                 }
+                console.log('userData: ', userList);
                 room.to(roomCode).emit('userData', { userList: userList });
             }
         }); 
