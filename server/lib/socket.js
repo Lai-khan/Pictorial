@@ -114,8 +114,8 @@ module.exports = (server, app, sessionMiddleware) => {
             }
         });
 
-        socket.on('roundStart', async (roomCode, time) => {
-            console.log('socket.io room roundStart!');
+        socket.on('roundReady', async (roomCode) => {
+            console.log('socket.io room roundReady!');
 
             // ready~ 3! 2! 1!
             let num = 3;
@@ -124,13 +124,17 @@ module.exports = (server, app, sessionMiddleware) => {
                 room.to(roomCode).emit('countdown', { time: num });
                 num--;
             }
-            var count = setInterval(countdown, 1000);
+            var timer = setInterval(countdown, 1000);
             setTimeout(function(){
-                clearInterval(count);
+                clearInterval(timer);
             }, 4001);
+        });
+
+        socket.on('roundStart', async (roomCode, time) => {
+            console.log('socket.io room roundStart!');
 
             // timer
-            num = time;
+            let num = time;
             function countdown() {
                 console.log('timer ', num);
                 room.to(roomCode).emit('timer', { time: num });
@@ -140,7 +144,7 @@ module.exports = (server, app, sessionMiddleware) => {
             setTimeout(function(){
                 clearInterval(timer);
             }, (time + 1) * 1000 + 1);
-        });
+        })
 
         socket.on('score', async (name, roomCode, isCorrect, sec) => {
             console.log('socket.io room score!');
