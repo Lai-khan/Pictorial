@@ -90,6 +90,11 @@ module.exports = (server, app, sessionMiddleware) => {
             }
             console.log('readyUserData: ', userList);
             room.to(roomCode).emit('readyUserData', { userList: userList });
+
+            const userNum = await db.getUsersInRoom(roomCode);
+            if(userNum.length <= result.length) {
+                room.to(roomCode).emit('allUserReady', { text: 'All Users are Ready!' });
+            }
         });
 
         socket.on('score', async (name, roomCode, isCorrect, sec) => {

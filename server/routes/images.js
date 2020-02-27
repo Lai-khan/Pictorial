@@ -74,7 +74,7 @@ router.post('/upload',
 /* 정답 레이블 처리 */
 router.get('/ready', 
   async (req, res, next)=>{
-    const result = await getAnswerList(req.body.code);
+    const result = await getAnswerList(req.query.code);
     res.status(200).json({answerList : result});
   } 
 ); 
