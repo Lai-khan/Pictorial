@@ -127,4 +127,14 @@ const changeProfile = async (name, roomCode, profile) => {
     return result;
 }
 
-module.exports = { findRoom, addRoom, addUser, findUser, getUsersInRoom, getReadyUsersInRoom, setRoom, getRoomSetting, setUserScore, getUserScore, deleteRoom, deleteUser, insertImg, isGameStart, dbUpdateLabel, setUserReady, setGameStart, getAnswerList, changeProfile };
+const setUserimageDownload = async (name, roomCode, download) => {
+    const result = await User.update( {imageDownload: download}, { where: {name: name, roomCode: roomCode} });
+    return result;
+}
+
+const getImageDownloadUsersInRoom = async (roomCode) => {
+    const result = await User.findAll({ where: {roomCode: roomCode, imageDownload: true} });
+    return result;
+}
+
+module.exports = { findRoom, addRoom, addUser, findUser, getUsersInRoom, getReadyUsersInRoom, setRoom, getRoomSetting, setUserScore, getUserScore, deleteRoom, deleteUser, insertImg, isGameStart, dbUpdateLabel, setUserReady, setGameStart, getAnswerList, changeProfile, setUserimageDownload, getImageDownloadUsersInRoom };

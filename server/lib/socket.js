@@ -62,7 +62,7 @@ module.exports = (server, app, sessionMiddleware) => {
             }
             console.log('userData: ', userList);
             room.to(roomCode).emit('userData', { userList: userList });
-        })
+        });
 
         socket.on('setGameStart', async (roomCode, start) => {
             console.log('socket.io room setGameStart!');
@@ -92,8 +92,45 @@ module.exports = (server, app, sessionMiddleware) => {
             room.to(roomCode).emit('readyUserData', { userList: userList });
 
             const userNum = await db.getUsersInRoom(roomCode);
+            console.log('userNum: ', userNum.length, ', readyUserNum: ', result.length);
             if(userNum.length <= result.length) {
+                console.log('All Users are Ready!');
                 room.to(roomCode).emit('allUserReady', { text: 'All Users are Ready!' });
+            }
+        });
+
+        socket.on('imageDownload', async (name, roomCode) => {
+            console.log('socket.io room imageDownload!');
+
+            const down = await db.setUserimageDownloaded(name, roomCode, true);
+
+            // down user
+            const result = await db.getImageDownloadUsersInRoom(roomCode);
+            const userNum = await db.getUsersInRoom(roomCode);
+            console.log('userNum: ', userNum.length, ', downloadUserNum: ', result.length);
+            if(userNum.length <= result.length) {
+                console.log('All Users Download Images!');
+                room.to(roomCode).emit('allUserDownload', { text: 'All Users Download Images!' });
+            }
+        });
+
+        socket.on('roundStart', async (roomCode, time) => {
+            console.log('socket.io room roundStart!');
+
+            // ready~ 3! 2! 1!
+            for(var i=3; i>=0; i--) {
+                await setTimeout(function() {
+                    console.log('countdown ', i);
+                    room.to(roomCode).emit('countdown', { time: i });
+                }, 1000);
+            }
+
+            // timer
+            for(var i=time; i>=0; i--) {
+                await setTimeout(function() {
+                    console.log('timer ', i);
+                    room.to(roomCode).emit('timer', { time: i });
+                }, 1000);
             }
         });
 
