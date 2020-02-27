@@ -102,7 +102,7 @@ module.exports = (server, app, sessionMiddleware) => {
         socket.on('imageDownload', async (name, roomCode) => {
             console.log('socket.io room imageDownload!');
 
-            const down = await db.setUserimageDownloaded(name, roomCode, true);
+            const down = await db.setUserimageDownload(name, roomCode, true);
 
             // down user
             const result = await db.getImageDownloadUsersInRoom(roomCode);
@@ -118,20 +118,28 @@ module.exports = (server, app, sessionMiddleware) => {
             console.log('socket.io room roundStart!');
 
             // ready~ 3! 2! 1!
-            for(var i=3; i>=0; i--) {
-                await setTimeout(function() {
-                    console.log('countdown ', i);
-                    room.to(roomCode).emit('countdown', { time: i });
-                }, 1000);
+            let num = 3;
+            function countdown() {
+                console.log('countdown ', num);
+                room.to(roomCode).emit('countdown', { time: num });
+                num--;
             }
+            var count = setInterval(countdown, 1000);
+            setTimeout(function(){
+                clearInterval(count);
+            }, 4001);
 
             // timer
-            for(var i=time; i>=0; i--) {
-                await setTimeout(function() {
-                    console.log('timer ', i);
-                    room.to(roomCode).emit('timer', { time: i });
-                }, 1000);
+            num = time;
+            function countdown() {
+                console.log('timer ', num);
+                room.to(roomCode).emit('timer', { time: num });
+                num--;
             }
+            var timer = setInterval(countdown, 1000);
+            setTimeout(function(){
+                clearInterval(timer);
+            }, (time + 1) * 1000 + 1);
         });
 
         socket.on('score', async (name, roomCode, isCorrect, sec) => {
