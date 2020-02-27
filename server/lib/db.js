@@ -122,4 +122,9 @@ const setGameStart = async (roomCode, start) => {
     return result;
 }
 
-module.exports = { findRoom, addRoom, addUser, findUser, getUsersInRoom, getReadyUsersInRoom, setRoom, getRoomSetting, setUserScore, getUserScore, deleteRoom, deleteUser, insertImg, isGameStart, dbUpdateLabel, setUserReady, setGameStart, getAnswerList };
+const changeProfile = async (name, roomCode, profile) => {
+    const result = await User.update( {profile: profile}, { where: {name: name, roomCode: roomCode} });
+    return result;
+}
+
+module.exports = { findRoom, addRoom, addUser, findUser, getUsersInRoom, getReadyUsersInRoom, setRoom, getRoomSetting, setUserScore, getUserScore, deleteRoom, deleteUser, insertImg, isGameStart, dbUpdateLabel, setUserReady, setGameStart, getAnswerList, changeProfile };

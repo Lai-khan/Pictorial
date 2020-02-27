@@ -50,14 +50,30 @@ module.exports = (server, app, sessionMiddleware) => {
             room.to(roomCode).emit('roomData', { roomData: data.dataValues });
         });
 
+        socket.on('profileChange', async (name, roomCode, profile) => {
+            console.log('socket.io room profileChange!');
+
+            const change = await db.changeProfile(name, roomCode, profile);
+
+            const result = await db.getUsersInRoom(code);
+            let userList = [];
+            for(var i=0; i<result.length; i++) {
+                userList.push(result[i].dataValues);
+            }
+            console.log('userData: ', userList);
+            room.to(roomCode).emit('userData', { userList: userList });
+        })
+
         socket.on('setGameStart', async (roomCode, start) => {
             console.log('socket.io room setGameStart!');
 
             const result = await db.setGameStart(roomCode, start);
-            const data = await db.getRoomSetting(roomCode);
-
-            console.log('roomData: ', data.dataValues);
-            room.to(roomCode).emit('roomData', { roomData: data.dataValues });
+            
+            if(start === true) {
+                room.to(roomCode).emit('gameStart', { text: 'Game Start!' });
+            } else if(start === false) {
+                room.to(roomCode).emit('gameFinish', { text: 'Game Finish!' });
+            }
         });
 
         socket.on('ready', async (name, roomCode) => {
@@ -116,22 +132,26 @@ module.exports = (server, app, sessionMiddleware) => {
             const name = req.session.userName;
             const roomCode = req.session.roomCode;
 
-            socket.leave(roomCode);
-            console.log('leave room ', roomCode, '!');
-
-            const deleteUser = await db.deleteUser(name, roomCode);
-            console.log('delete user: ', name);
-            const result = await db.getUsersInRoom(roomCode);
-            if(result.length === 0) {
-                const deleteRoom = await db.deleteRoom(roomCode);
-                console.log('delete room: ', roomCode);
-            } else {
-                let userList = [];
-                for(var i=0; i<result.length; i++) {
-                    userList.push(result[i].dataValues);
+            if(roomCode !== undefined) {
+                socket.leave(roomCode);
+                console.log('leave room ', roomCode, '!');
+    
+                if(name !== undefined) {
+                    const deleteUser = await db.deleteUser(name, roomCode);
+                    console.log('delete user: ', name);
                 }
-                console.log('userData: ', userList);
-                room.to(roomCode).emit('userData', { userList: userList });
+                const result = await db.getUsersInRoom(roomCode);
+                if(result.length === 0) {
+                    const deleteRoom = await db.deleteRoom(roomCode);
+                    console.log('delete room: ', roomCode);
+                } else {
+                    let userList = [];
+                    for(var i=0; i<result.length; i++) {
+                        userList.push(result[i].dataValues);
+                    }
+                    console.log('userData: ', userList);
+                    room.to(roomCode).emit('userData', { userList: userList });
+                }
             }
         }); 
     });
