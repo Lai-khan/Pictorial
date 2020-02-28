@@ -111,10 +111,28 @@ module.exports = (server, app, sessionMiddleware) => {
             if(userNum.length <= result.length) {
                 console.log('All Users Download Images!');
                 room.to(roomCode).emit('allUserDownload', { text: 'All Users Download Images!' });
+                const roomData = await db.getRoomSetting(roomCode);
+                const time = roomData.dataValues.time;
+                console.log('send round start socket message');
+                socket.emit('start', roomCode, time);
             }
         });
 
-        socket.on('roundReady', async (roomCode) => {
+        socket.on('start', async (roomCode, time) => {
+            console.log('socket.io room start!');
+
+            const result = await db.getRoundStart(roomCode);
+
+            if(result === false) {
+                await db.setRoundStart(roomCode, true);
+                console.log('roundStart set true!');
+                socket.emit('roundReady', roomCode, time);
+            } else {
+                return;
+            }
+        })
+
+        socket.on('roundReady', async (roomCode, time) => {
             console.log('socket.io room roundReady!');
 
             // ready~ 3! 2! 1!
@@ -123,6 +141,9 @@ module.exports = (server, app, sessionMiddleware) => {
                 console.log('countdown ', num);
                 room.to(roomCode).emit('countdown', { time: num });
                 num--;
+                if(num < 0) {
+                    socket.emit('roundStart', roomCode, time);
+                }
             }
             var timer = setInterval(countdown, 1000);
             setTimeout(function(){
@@ -139,12 +160,29 @@ module.exports = (server, app, sessionMiddleware) => {
                 console.log('timer ', num);
                 room.to(roomCode).emit('timer', { time: num });
                 num--;
+                if(num < 0) {
+                    socket.emit('finish', roomCode);
+                }
             }
             var timer = setInterval(countdown, 1000);
             setTimeout(function(){
                 clearInterval(timer);
             }, (time + 1) * 1000 + 1);
-        })
+        });
+
+        socket.on('finish', async (roomCode) => {
+            console.log('socket.io room finish!');
+
+            const result = await db.getRoundStart(roomCode);
+
+            if(result === true) {
+                await db.setRoundStart(roomCode, false);
+                console.log('roundStart set false!');
+                room.to(roomCode).emit('roundFinish', {text: 'Round Finish!'});
+            } else {
+                return;
+            }
+        });
 
         socket.on('score', async (name, roomCode, isCorrect, sec) => {
             console.log('socket.io room score!');

@@ -137,4 +137,15 @@ const getImageDownloadUsersInRoom = async (roomCode) => {
     return result;
 }
 
-module.exports = { findRoom, addRoom, addUser, findUser, getUsersInRoom, getReadyUsersInRoom, setRoom, getRoomSetting, setUserScore, getUserScore, deleteRoom, deleteUser, insertImg, isGameStart, dbUpdateLabel, setUserReady, setGameStart, getAnswerList, changeProfile, setUserimageDownload, getImageDownloadUsersInRoom };
+const setRoundStart = async (roomCode, start) => {
+    const result = await Room.update( {roundStart: start}, { where: {code: roomCode} } );
+    return result;
+}
+
+const getRoundStart = async (roomCode) => {
+    const result = await Room.findOne( {attributes: ['roundStart']}, { where: {code: roomCode} });
+    console.log('result: ', result.dataValues);
+    return result.dataValues.roundStart;
+}
+
+module.exports = { findRoom, addRoom, addUser, findUser, getUsersInRoom, getReadyUsersInRoom, setRoom, getRoomSetting, setUserScore, getUserScore, deleteRoom, deleteUser, insertImg, isGameStart, dbUpdateLabel, setUserReady, setGameStart, getAnswerList, changeProfile, setUserimageDownload, getImageDownloadUsersInRoom, setRoundStart, getRoundStart };
