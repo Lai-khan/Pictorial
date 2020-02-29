@@ -55,7 +55,7 @@ module.exports = (server, app, sessionMiddleware) => {
 
             const change = await db.changeProfile(name, roomCode, profile);
 
-            const result = await db.getUsersInRoom(code);
+            const result = await db.getUsersInRoom(roomCode);
             let userList = [];
             for(var i=0; i<result.length; i++) {
                 userList.push(result[i].dataValues);
@@ -125,7 +125,7 @@ module.exports = (server, app, sessionMiddleware) => {
 
                 // ready~ 3! 2! 1!
                 let num = 3;
-                function countdown() {
+                async function countdown() {
                     console.log('countdown ', num);
                     room.to(roomCode).emit('countdown', { time: num });
                     num--;
@@ -153,7 +153,7 @@ module.exports = (server, app, sessionMiddleware) => {
 
                 // timer
                 let num = time;
-                function countdown() {
+                async function countdown() {
                     console.log('timer ', num);
                     room.to(roomCode).emit('timer', { time: num });
                     num--;

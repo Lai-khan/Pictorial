@@ -143,7 +143,7 @@ const setRoundStart = async (roomCode, start) => {
 }
 
 const getRoundStart = async (roomCode) => {
-    const result = await Room.findOne( {attributes: ['roundStart']}, { where: {code: roomCode} });
+    const result = await Room.findOne( { where: {code: roomCode} });
     console.log('result: ', result.dataValues);
     return result.dataValues.roundStart;
 }

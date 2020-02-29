@@ -26,7 +26,7 @@ module.exports = (sequelize, DataTypes) => {
         profile: {
             type: DataTypes.INTEGER.UNSIGNED,
             allowNull: true,
-            defaultValue: 0,
+            defaultValue: 1,
         }
     }, {
         timestamps: false
