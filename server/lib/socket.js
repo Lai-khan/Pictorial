@@ -143,8 +143,8 @@ module.exports = (server, app, sessionMiddleware) => {
         socket.on('roundStart', async (roomCode) => {
             console.log('socket.io room roundStart!');
 
-            const room = await db.getRoomSetting(roomCode);
-            const time = room.dataValues.time;
+            const setting = await db.getRoomSetting(roomCode);
+            const time = setting.dataValues.time;
             const result = await db.getRoundStart(roomCode);
 
             if(result === false) {
@@ -175,8 +175,8 @@ module.exports = (server, app, sessionMiddleware) => {
             // calculate score
             let score;
             if(isCorrect) {
-                const room = await db.getRoomSetting(roomCode);
-                const time = room.dataValues.time;
+                const setting = await db.getRoomSetting(roomCode);
+                const time = setting.dataValues.time;
                 score = (10-sec)*50;
                 if(time === 3) {
                     score += 30;
