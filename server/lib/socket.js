@@ -114,7 +114,7 @@ module.exports = (server, app, sessionMiddleware) => {
             }
         });
 
-        socket.on('roundReady', async (roomCode, callback) => {
+        socket.on('roundReady', async (roomCode) => {
             console.log('socket.io room roundReady!');
 
             const result = await db.getRoundStart(roomCode);
@@ -134,7 +134,6 @@ module.exports = (server, app, sessionMiddleware) => {
                         await db.setRoundStart(roomCode, false);
                         console.log('roundStart set false!');
                         console.log('countdown finish!');
-                        callback();
                     }
                 }
                 var timer = setInterval(countdown, 1000);
@@ -144,7 +143,8 @@ module.exports = (server, app, sessionMiddleware) => {
         socket.on('roundStart', async (roomCode) => {
             console.log('socket.io room roundStart!');
 
-            const time = await db.getRoomSetting(roomCode).dataValues.time;
+            const room = await db.getRoomSetting(roomCode);
+            const time = room.dataValues.time;
             const result = await db.getRoundStart(roomCode);
 
             if(result === false) {
