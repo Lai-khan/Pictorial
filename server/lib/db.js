@@ -148,4 +148,10 @@ const getRoundStart = async (roomCode) => {
     return result.dataValues.roundStart;
 }
 
-module.exports = { findRoom, addRoom, addUser, findUser, getUsersInRoom, getReadyUsersInRoom, setRoom, getRoomSetting, setUserScore, getUserScore, deleteRoom, deleteUser, insertImg, isGameStart, dbUpdateLabel, setUserReady, setGameStart, getAnswerList, changeProfile, setUserimageDownload, getImageDownloadUsersInRoom, setRoundStart, getRoundStart };
+const initRoom = async (roomCode) => {
+    const roomInit = await Room.update( {round: 2, time: 3, gameStart: false, roundStart: false}, { where: {code: roomCode} });
+    const userInit = await User.update( {score: 0, isReady: false, imageDownload: false}, {where: {roomCode: roomCode}});
+    return {roomInit, userInit};
+}
+
+module.exports = { findRoom, addRoom, addUser, findUser, getUsersInRoom, getReadyUsersInRoom, setRoom, getRoomSetting, setUserScore, getUserScore, deleteRoom, deleteUser, insertImg, isGameStart, dbUpdateLabel, setUserReady, setGameStart, getAnswerList, changeProfile, setUserimageDownload, getImageDownloadUsersInRoom, setRoundStart, getRoundStart, initRoom };

@@ -72,6 +72,7 @@ module.exports = (server, app, sessionMiddleware) => {
             if(start === true) {
                 room.to(roomCode).emit('gameStart', { text: 'Game Start!' });
             } else if(start === false) {
+                const init = await db.initRoom(roomCode);
                 room.to(roomCode).emit('gameFinish', { text: 'Game Finish!' });
             }
         });
@@ -161,7 +162,6 @@ module.exports = (server, app, sessionMiddleware) => {
                         clearInterval(timer);
                         await db.setRoundStart(roomCode, false);
                         console.log('roundStart set false!');
-                        socket.emit('finish', roomCode);
                         room.to(roomCode).emit('roundFinish', {text: 'Round Finish!'});
                     }
                 }
