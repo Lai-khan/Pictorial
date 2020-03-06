@@ -149,7 +149,7 @@ const getRoundStart = async (roomCode) => {
 }
 
 const initRoom = async (roomCode) => {
-    const roomInit = await Room.update( {round: 2, time: 3, gameStart: false, roundStart: false}, { where: {code: roomCode} });
+    const roomInit = await Room.update( {gameStart: false, roundStart: false}, { where: {code: roomCode} });
     const userInit = await User.update( {score: 0, isReady: false, imageDownload: false}, {where: {roomCode: roomCode}});
     return {roomInit, userInit};
 }

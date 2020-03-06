@@ -191,7 +191,11 @@ module.exports = (server, app, sessionMiddleware) => {
             // DB
             const user = await db.getUserScore(name, roomCode);
             const originalScore = user.dataValues.score;
-            const updateScore = await db.setUserScore(name, roomCode, originalScore+score);
+            if(originalScore+score < 0) {
+                const updateScore = await db.setUserScore(name, roomCode, 0);
+            } else {
+                const updateScore = await db.setUserScore(name, roomCode, originalScore+score);
+            }
 
             // socket - updateScore return
             const result = await db.getUsersInRoom(roomCode);
