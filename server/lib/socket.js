@@ -171,8 +171,8 @@ module.exports = (server, app, sessionMiddleware) => {
                         for(var i=0; i<users.length; i++) {
                             userList.push(users[i].dataValues);
                         }
-                        console.log('userData: ', userList);
-                        room.to(roomCode).emit('userData', { userList: userList });
+                        console.log('updateUserData: ', userList);
+                        room.to(roomCode).emit('updateUserData', { userList: userList });
                     }
                 }
                 var timer = setInterval(countdown, 1000);
