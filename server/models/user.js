@@ -23,6 +23,11 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: true,
             defaultValue: false,
         },
+        isCorrect: {
+            type: DataTypes.BOOLEAN,
+            allowNull: true,
+            defaultValue: false,
+        },
         profile: {
             type: DataTypes.INTEGER.UNSIGNED,
             allowNull: true,

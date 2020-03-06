@@ -163,6 +163,16 @@ module.exports = (server, app, sessionMiddleware) => {
                         await db.setRoundStart(roomCode, false);
                         console.log('roundStart set false!');
                         room.to(roomCode).emit('roundFinish', {text: 'Round Finish!'});
+                        
+                        // init score & send userData
+                        await db.initUserScore(roomCode);
+                        const users = await db.getUsersInRoom(roomCode);
+                        let userList = [];
+                        for(var i=0; i<users.length; i++) {
+                            userList.push(users[i].dataValues);
+                        }
+                        console.log('userData: ', userList);
+                        room.to(roomCode).emit('userData', { userList: userList });
                     }
                 }
                 var timer = setInterval(countdown, 1000);
@@ -192,9 +202,9 @@ module.exports = (server, app, sessionMiddleware) => {
             const user = await db.getUserScore(name, roomCode);
             const originalScore = user.dataValues.score;
             if(originalScore+score < 0) {
-                const updateScore = await db.setUserScore(name, roomCode, 0);
+                const updateScore = await db.setUserScore(name, roomCode, 0, isCorrect);
             } else {
-                const updateScore = await db.setUserScore(name, roomCode, originalScore+score);
+                const updateScore = await db.setUserScore(name, roomCode, originalScore+score, isCorrect);
             }
 
             // socket - updateScore return
