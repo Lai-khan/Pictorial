@@ -148,15 +148,16 @@ const getRoundStart = async (roomCode) => {
     return result.dataValues.roundStart;
 }
 
-const initRoom = async (roomCode) => {
-    const roomInit = await Room.update( {gameStart: false, roundStart: false}, { where: {code: roomCode} });
-    const userInit = await User.update( {score: 0, isReady: false, imageDownload: false}, {where: {roomCode: roomCode}});
-    return {roomInit, userInit};
+const resetRoom = async (roomCode) => {
+    const roomReset = await Room.update( {gameStart: false, roundStart: false}, { where: {code: roomCode} });
+    const userReset = await User.update( {score: 0, isReady: false, imageDownload: false}, {where: {roomCode: roomCode}});
+    const deleteImage = await ImageInfo.destroy( {where: {roomCode: roomCode} });
+    return {roomReset, userReset};
 }
 
-const initUserScore = async (roomCode) => {
+const resetUserCorrect = async (roomCode) => {
     const result = await User.update( {isCorrect: false}, { where: {roomCode: roomCode} });
     return result;
 }
 
-module.exports = { findRoom, addRoom, addUser, findUser, getUsersInRoom, getReadyUsersInRoom, setRoom, getRoomSetting, setUserScore, getUserScore, deleteRoom, deleteUser, insertImg, isGameStart, dbUpdateLabel, setUserReady, setGameStart, getAnswerList, changeProfile, setUserimageDownload, getImageDownloadUsersInRoom, setRoundStart, getRoundStart, initRoom, initUserScore };
+module.exports = { findRoom, addRoom, addUser, findUser, getUsersInRoom, getReadyUsersInRoom, setRoom, getRoomSetting, setUserScore, getUserScore, deleteRoom, deleteUser, insertImg, isGameStart, dbUpdateLabel, setUserReady, setGameStart, getAnswerList, changeProfile, setUserimageDownload, getImageDownloadUsersInRoom, setRoundStart, getRoundStart, resetRoom, resetUserCorrect };

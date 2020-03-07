@@ -72,7 +72,7 @@ module.exports = (server, app, sessionMiddleware) => {
             if(start === true) {
                 room.to(roomCode).emit('gameStart', { text: 'Game Start!' });
             } else if(start === false) {
-                const init = await db.initRoom(roomCode);
+                const reset = await db.resetRoom(roomCode);
                 room.to(roomCode).emit('gameFinish', { text: 'Game Finish!' });
             }
         });
@@ -165,7 +165,7 @@ module.exports = (server, app, sessionMiddleware) => {
                         room.to(roomCode).emit('roundFinish', {text: 'Round Finish!'});
                         
                         // init score & send userData
-                        await db.initUserScore(roomCode);
+                        await db.resetUserCorrect(roomCode);
                         const users = await db.getUsersInRoom(roomCode);
                         let userList = [];
                         for(var i=0; i<users.length; i++) {
