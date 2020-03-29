@@ -32,9 +32,11 @@ module.exports = (server, app, sessionMiddleware) => {
             for(var i=0; i<result.length; i++) {
                 userList.push(result[i].dataValues);
             }
+            console.log('userData: ', userList);
             room.to(code).emit('userData', { userList: userList });
             
             const data = await db.getRoomSetting(code);
+            console.log('roomData: ', data.dataValues);
             room.to(code).emit('roomData', { roomData: data.dataValues });
         });
 
@@ -44,16 +46,35 @@ module.exports = (server, app, sessionMiddleware) => {
             const result = await db.setRoom(roomCode, round, time);
             const data = await db.getRoomSetting(roomCode);
 
+            console.log('roomData: ', data.dataValues);
             room.to(roomCode).emit('roomData', { roomData: data.dataValues });
+        });
+
+        socket.on('profileChange', async (name, roomCode, profile) => {
+            console.log('socket.io room profileChange!');
+
+            const change = await db.changeProfile(name, roomCode, profile);
+
+            const result = await db.getUsersInRoom(roomCode);
+            let userList = [];
+            for(var i=0; i<result.length; i++) {
+                userList.push(result[i].dataValues);
+            }
+            console.log('userData: ', userList);
+            room.to(roomCode).emit('userData', { userList: userList });
         });
 
         socket.on('setGameStart', async (roomCode, start) => {
             console.log('socket.io room setGameStart!');
 
             const result = await db.setGameStart(roomCode, start);
-            const data = await db.getRoomSetting(roomCode);
-
-            room.to(roomCode).emit('roomData', { roomData: data.dataValues });
+            
+            if(start === true) {
+                room.to(roomCode).emit('gameStart', { text: 'Game Start!' });
+            } else if(start === false) {
+                const reset = await db.resetRoom(roomCode);
+                room.to(roomCode).emit('gameFinish', { text: 'Game Finish!' });
+            }
         });
 
         socket.on('ready', async (name, roomCode) => {
@@ -68,7 +89,95 @@ module.exports = (server, app, sessionMiddleware) => {
             for(var i=0; i<result.length; i++) {
                 userList.push(result[i].dataValues);
             }
+            console.log('readyUserData: ', userList);
             room.to(roomCode).emit('readyUserData', { userList: userList });
+
+            const userNum = await db.getUsersInRoom(roomCode);
+            console.log('userNum: ', userNum.length, ', readyUserNum: ', result.length);
+            if(userNum.length <= result.length) {
+                console.log('All Users are Ready!');
+                room.to(roomCode).emit('allUserReady', { text: 'All Users are Ready!' });
+            }
+        });
+
+        socket.on('imageDownload', async (name, roomCode) => {
+            console.log('socket.io room imageDownload!');
+
+            const down = await db.setUserimageDownload(name, roomCode, true);
+
+            // down user
+            const result = await db.getImageDownloadUsersInRoom(roomCode);
+            const userNum = await db.getUsersInRoom(roomCode);
+            console.log('userNum: ', userNum.length, ', downloadUserNum: ', result.length);
+            if(userNum.length <= result.length) {
+                console.log('All Users Download Images!');
+                room.to(roomCode).emit('allUserDownload', { text: 'All Users Download Images!' });
+            }
+        });
+
+        socket.on('roundReady', async (roomCode) => {
+            console.log('socket.io room roundReady!');
+
+            const result = await db.getRoundStart(roomCode);
+
+            if(result === false) {
+                await db.setRoundStart(roomCode, true);
+                console.log('roundStart set true!');
+                await db.resetUserCorrect(roomCode);
+                console.log('user correct reset!');
+
+                // ready~ 3! 2! 1!
+                let num = 3;
+                async function countdown() {
+                    console.log('countdown ', num);
+                    room.to(roomCode).emit('countdown', { time: num });
+                    num--;
+                    if(num < 0) {
+                        clearInterval(timer);
+                        await db.setRoundStart(roomCode, false);
+                        console.log('roundStart set false!');
+                        console.log('countdown finish!');
+                    }
+                }
+                var timer = setInterval(countdown, 1000);
+            }
+        });
+
+        socket.on('roundStart', async (roomCode) => {
+            console.log('socket.io room roundStart!');
+
+            const setting = await db.getRoomSetting(roomCode);
+            const time = setting.dataValues.time;
+            const result = await db.getRoundStart(roomCode);
+
+            if(result === false) {
+                await db.setRoundStart(roomCode, true);
+                console.log('roundStart set true!');
+
+                // timer
+                let num = time;
+                async function countdown() {
+                    console.log('timer ', num);
+                    room.to(roomCode).emit('timer', { time: num });
+                    num--;
+                    if(num < 0) {
+                        clearInterval(timer);
+                        await db.setRoundStart(roomCode, false);
+                        console.log('roundStart set false!');
+                        room.to(roomCode).emit('roundFinish', {text: 'Round Finish!'});
+                        
+                        // send userData
+                        const users = await db.getUsersInRoom(roomCode);
+                        let userList = [];
+                        for(var i=0; i<users.length; i++) {
+                            userList.push(users[i].dataValues);
+                        }
+                        console.log('updateUserData: ', userList);
+                        room.to(roomCode).emit('updateUserData', { userList: userList });
+                    }
+                }
+                var timer = setInterval(countdown, 1000);
+            }
         });
 
         socket.on('score', async (name, roomCode, isCorrect, sec) => {
@@ -77,8 +186,8 @@ module.exports = (server, app, sessionMiddleware) => {
             // calculate score
             let score;
             if(isCorrect) {
-                const room = await db.getRoomSetting(roomCode);
-                const time = room.dataValues.time;
+                const setting = await db.getRoomSetting(roomCode);
+                const time = setting.dataValues.time;
                 score = (10-sec)*50;
                 if(time === 3) {
                     score += 30;
@@ -93,7 +202,11 @@ module.exports = (server, app, sessionMiddleware) => {
             // DB
             const user = await db.getUserScore(name, roomCode);
             const originalScore = user.dataValues.score;
-            const updateScore = await db.setUserScore(name, roomCode, originalScore+score);
+            if(originalScore+score < 0) {
+                const updateScore = await db.setUserScore(name, roomCode, 0, isCorrect);
+            } else {
+                const updateScore = await db.setUserScore(name, roomCode, originalScore+score, isCorrect);
+            }
 
             // socket - updateScore return
             const result = await db.getUsersInRoom(roomCode);
@@ -101,6 +214,7 @@ module.exports = (server, app, sessionMiddleware) => {
             for(var i=0; i<result.length; i++) {
                 userList.push(result[i].dataValues);
             }
+            console.log('updateScore userData: ', userList);
             room.to(roomCode).emit('updateScore', { userList: userList });
         });
 
@@ -110,18 +224,26 @@ module.exports = (server, app, sessionMiddleware) => {
             const name = req.session.userName;
             const roomCode = req.session.roomCode;
 
-            socket.leave(roomCode);
-
-            const deleteUser = await db.deleteUser(name, roomCode);
-            const result = await db.getUsersInRoom(roomCode);
-            if(result.length === 0) {
-                const deleteRoom = await db.deleteRoom(roomCode);
-            } else {
-                let userList = [];
-                for(var i=0; i<result.length; i++) {
-                    userList.push(result[i].dataValues);
+            if(roomCode !== undefined) {
+                socket.leave(roomCode);
+                console.log('leave room ', roomCode, '!');
+    
+                if(name !== undefined) {
+                    const deleteUser = await db.deleteUser(name, roomCode);
+                    console.log('delete user: ', name);
                 }
-                room.to(roomCode).emit('userData', { userList: userList });
+                const result = await db.getUsersInRoom(roomCode);
+                if(result.length === 0) {
+                    const deleteRoom = await db.deleteRoom(roomCode);
+                    console.log('delete room: ', roomCode);
+                } else {
+                    let userList = [];
+                    for(var i=0; i<result.length; i++) {
+                        userList.push(result[i].dataValues);
+                    }
+                    console.log('userData: ', userList);
+                    room.to(roomCode).emit('userData', { userList: userList });
+                }
             }
         }); 
     });
