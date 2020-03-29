@@ -123,6 +123,8 @@ module.exports = (server, app, sessionMiddleware) => {
             if(result === false) {
                 await db.setRoundStart(roomCode, true);
                 console.log('roundStart set true!');
+                await db.resetUserCorrect(roomCode);
+                console.log('user correct reset!');
 
                 // ready~ 3! 2! 1!
                 let num = 3;
@@ -164,8 +166,7 @@ module.exports = (server, app, sessionMiddleware) => {
                         console.log('roundStart set false!');
                         room.to(roomCode).emit('roundFinish', {text: 'Round Finish!'});
                         
-                        // init score & send userData
-                        await db.resetUserCorrect(roomCode);
+                        // send userData
                         const users = await db.getUsersInRoom(roomCode);
                         let userList = [];
                         for(var i=0; i<users.length; i++) {
