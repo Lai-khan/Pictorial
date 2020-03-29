@@ -1,19 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link, Redirect } from 'react-router-dom';
+import React from 'react';
+import { useParams, Redirect } from 'react-router-dom';
 import styled from 'styled-components';
-import io from 'socket.io-client';
 import useRoom from '../hooks/useRoom';
 
 import Stars from '../svgs/Stars.svg';
 import Circle from '../svgs/circle.svg';
 import SmallCircle from '../svgs/small_circle.svg';
 import AlienL1 from '../svgs/alienL1.svg';
+import AlienL2 from '../svgs/alienL2.svg';
+import AlienL3 from '../svgs/alienL3.svg';
+import AlienL4 from '../svgs/alienL4.svg';
+import AlienL5 from '../svgs/alienL5.svg';
+import AlienL6 from '../svgs/alienL6.svg';
+import AlienL7 from '../svgs/alienL7.svg';
+import AlienL8 from '../svgs/alienL8.svg';
 import LinkShareBtn from '../svgs/link-share-btn.svg';
 import { ReactComponent as Left } from '../svgs/left.svg';
 import { ReactComponent as Right } from '../svgs/right.svg';
 import { ReactComponent as Loading } from '../svgs/loading.svg';
 import { ReactComponent as Ready } from '../svgs/check.svg';
-
 
 const Styled = {
   Container: styled.div`
@@ -125,14 +130,14 @@ const Styled = {
     padding: 6px 16px;
     margin-left: 24px;
   `,
-  MemberListContainer: styled.div`
+  UserListContainer: styled.div`
     margin-top: 61px;
     display: flex;
     justify-content: left;
     align-items: center;
     flex-direction: left;
   `,
-  MemberContainer: styled.div`
+  UserContainer: styled.div`
     width: 140px;
     display: flex;
     justify-content: center;
@@ -140,7 +145,7 @@ const Styled = {
     flex-direction: column;
     margin: 0 17px;
   `,
-  MemberAlienContainer: styled.div`
+  UserAlienContainer: styled.div`
     width: 140px;
     height: 140px;
     background-image: url(${SmallCircle});
@@ -150,19 +155,19 @@ const Styled = {
     justify-content: center;
     align-items: center;
   `,
-  MemberAlien: styled.div`
+  UserAlien: styled.div`
     width: 114px;
     height: 114px;
     background-image: url(${props => props.alien});
     background-size: 100% 100%;
     background-position: center;
   `,
-  MemberName: styled.h3`
+  UserName: styled.h3`
     font-size: 30px;
     color: #ffffff;
     margin: 28px 0 6px 0;
   `,
-  MemberStatus: styled.div`
+  UserStatus: styled.div`
     display: flex;
     justify-content: center;
     align-items: center;
@@ -182,35 +187,10 @@ const Styled = {
   `,
 }
 
-const END_POINT = 'https://pictorial.ga';
-let socket;
-
 function Room() {
-  const [nowPage, setNowPage] = useState('room');
   const { code } = useParams();
-  const { name, connected, round, timeLimit, memberList, onSetRound, onSetTimeLimit, onSetMemberList } = useRoom();
-
-  useEffect(() => {
-    socket = io(`${END_POINT}/room`);
-    socket.emit('join', name, code);
-    socket.on('message', ({text}) => {
-      console.log(name);
-      console.log(text);
-    });
-    socket.on('userData', ({userList}) => {
-      console.log(userList);
-      // const list = userList.filter(user => user.name !== name);
-      onSetMemberList(userList);
-    });
-    socket.on('roomData', ({roomData}) => {
-      console.log(roomData);
-      onSetRound(roomData.round);
-      onSetTimeLimit(roomData.time);
-    });
-    return () => {
-      socket.off('')
-    }
-  }, [name, code, onSetMemberList, onSetRound, onSetTimeLimit]);
+  const { name, connected, round, timeLimit, userList, profile,
+    onSetRound, onSetTimeLimit, onSetGameStart, onSetProfile } = useRoom();
 
   const handleLinkShare = () => {
     const url = `https://pictorial.surge.sh/${code}`;
@@ -222,113 +202,132 @@ function Room() {
     document.body.removeChild(textareaElement);
   }
 
+  const handleChangeProfile = (to) => {
+    const PROFILE_MAX_NUM = 8;
+    if (to === 'left') {
+      if (profile <= 1) {
+        onSetProfile(PROFILE_MAX_NUM);
+      } else {
+        onSetProfile(profile - 1);
+      }
+    } else {
+      if (profile >= PROFILE_MAX_NUM) {
+        onSetProfile(1);
+      } else {
+        onSetProfile(profile + 1);
+      }
+    }
+  }
+
   const handleChangeRound = (e) => {
     const value = parseInt(e.target.value);
     onSetRound(value);
-    socket.emit('setRoom', code, value, timeLimit);
   }
 
   const handleChangeTimeLimit = (e) => {
     const value = parseInt(e.target.value);
     onSetTimeLimit(value);
-    socket.emit('setRoom', code, round, value);
   }
 
   const handleClickStart = () => {
-
+    if (userList.length > 1) {
+      onSetGameStart(true);
+    }
   }
 
   return (
-    <>
-    {
-      nowPage === 'room' &&
-      <Styled.Container>
-        {
-          !connected &&
-          <Redirect to="/"></Redirect>
-        }
-        <Styled.LinkShareButton onClick={handleLinkShare} />
-        <Styled.Lobby>
-          <Styled.Name>{ name }</Styled.Name>
-          <Styled.CharacterSelectContainer>
-            {/* <Styled.SelectButton left>
-              <Left />
-            </Styled.SelectButton> */}
-            <Styled.AlienContainer>
-              <Styled.Alien alien={AlienL1} />
-            </Styled.AlienContainer>
-            {/* <Styled.SelectButton right>
-              <Right />
-            </Styled.SelectButton> */}
-          </Styled.CharacterSelectContainer>
-          <Styled.MiddleContainer>
-            <Link onClick={handleClickStart} to={`/room/${code}/upload`}>
-              <Styled.StartButton>
-                START
-              </Styled.StartButton>
-            </Link>
-            <Styled.OptionContainer>
-              <Styled.Option>
-                <Styled.ListCircle />
-                라운드 수
-                <Styled.Select value={round} onChange={handleChangeRound}>
-                  <option value={2} defaultValue>
-                    2
-                  </option>
-                  <option value={3}>
-                    3
-                  </option>
-                  <option value={5}>
-                    5
-                  </option>
-                </Styled.Select>
-              </Styled.Option>
-              <Styled.Option>
-                <Styled.ListCircle />
-                제한 시간
-                <Styled.Select value={timeLimit} onChange={handleChangeTimeLimit}>
-                  <option value={3} defaultValue>
-                    3s
-                  </option>
-                  <option value={5}>
-                    5s
-                  </option>
-                  <option value={10}>
-                    10s
-                  </option>
-                </Styled.Select>
-              </Styled.Option>
-            </Styled.OptionContainer>
-          </Styled.MiddleContainer>
-          <Styled.MemberListContainer>
-            { 
-              memberList.filter(member => member.name !== name).map((member) => (
-                <Styled.MemberContainer key={member.id}>
-                  <Styled.MemberAlienContainer>
-                    <Styled.MemberAlien alien={AlienL1} />
-                  </Styled.MemberAlienContainer>
-                  <Styled.MemberName>{ member.name }</Styled.MemberName>
-                  <Styled.MemberStatus>
+    <Styled.Container>
+      {
+        !connected &&
+        <Redirect to="/"></Redirect>
+      }
+      <Styled.LinkShareButton onClick={handleLinkShare} />
+      <Styled.Lobby>
+        <Styled.Name>{ name }</Styled.Name>
+        <Styled.CharacterSelectContainer>
+          <Styled.SelectButton left onClick={() => handleChangeProfile('left')}>
+            <Left />
+          </Styled.SelectButton>
+          <Styled.AlienContainer>
+            { profile === 1 && <Styled.Alien alien={AlienL1} /> }
+            { profile === 2 && <Styled.Alien alien={AlienL2} /> }
+            { profile === 3 && <Styled.Alien alien={AlienL3} /> }
+            { profile === 4 && <Styled.Alien alien={AlienL4} /> }
+            { profile === 5 && <Styled.Alien alien={AlienL5} /> }
+            { profile === 6 && <Styled.Alien alien={AlienL6} /> }
+            { profile === 7 && <Styled.Alien alien={AlienL7} /> }
+            { profile === 8 && <Styled.Alien alien={AlienL8} /> }
+          </Styled.AlienContainer>
+          <Styled.SelectButton right onClick={() => handleChangeProfile('right')}>
+            <Right />
+          </Styled.SelectButton>
+        </Styled.CharacterSelectContainer>
+        <Styled.MiddleContainer>
+          <Styled.StartButton onClick={handleClickStart}>
+            START
+          </Styled.StartButton>
+          <Styled.OptionContainer>
+            <Styled.Option>
+              <Styled.ListCircle />
+              라운드 수
+              <Styled.Select value={round} onChange={handleChangeRound}>
+                <option value={2} defaultValue>
+                  2
+                </option>
+                <option value={3}>
+                  3
+                </option>
+                <option value={5}>
+                  5
+                </option>
+              </Styled.Select>
+            </Styled.Option>
+            <Styled.Option>
+              <Styled.ListCircle />
+              제한 시간
+              <Styled.Select value={timeLimit} onChange={handleChangeTimeLimit}>
+                <option value={3} defaultValue>
+                  3s
+                </option>
+                <option value={5}>
+                  5s
+                </option>
+                <option value={10}>
+                  10s
+                </option>
+              </Styled.Select>
+            </Styled.Option>
+          </Styled.OptionContainer>
+        </Styled.MiddleContainer>
+        <Styled.UserListContainer>
+          { 
+            userList.filter(user => user.name !== name).map((user) => (
+              <Styled.UserContainer key={user.id}>
+                <Styled.UserAlienContainer>
+                  { user.profile === 1 && <Styled.UserAlien alien={AlienL1} /> }
+                  { user.profile === 2 && <Styled.UserAlien alien={AlienL2} /> }
+                  { user.profile === 3 && <Styled.UserAlien alien={AlienL3} /> }
+                  { user.profile === 4 && <Styled.UserAlien alien={AlienL4} /> }
+                  { user.profile === 5 && <Styled.UserAlien alien={AlienL5} /> }
+                  { user.profile === 6 && <Styled.UserAlien alien={AlienL6} /> }
+                  { user.profile === 7 && <Styled.UserAlien alien={AlienL7} /> }
+                  { user.profile === 8 && <Styled.UserAlien alien={AlienL8} /> }
+                </Styled.UserAlienContainer>
+                <Styled.UserName>{ user.name }</Styled.UserName>
+                <Styled.UserStatus>
+                  { 
+                    user.isReady ?
                     <Ready />
-                  </Styled.MemberStatus>
-                </Styled.MemberContainer>
-              ))
-            }
-          </Styled.MemberListContainer>
-        </Styled.Lobby>
-      </Styled.Container>
-    }
-
-    {/* {
-      nowPage === 'imageUpload' &&
-      <ImageUpload />
-    }
-    
-    {
-      nowPage === 'game' &&
-      <Game /> */}
-    }
-    </>
+                    :
+                    <Loading />
+                  }
+                </Styled.UserStatus>
+              </Styled.UserContainer>
+            ))
+          }
+        </Styled.UserListContainer>
+      </Styled.Lobby>
+    </Styled.Container>
   )
 }
 

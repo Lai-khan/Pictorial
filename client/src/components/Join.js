@@ -77,7 +77,7 @@ const Styled = {
 
 function Join() {
   const [name, setName] = useState('');
-  const { onFetchRoomID, onConnectRoom, onSetCode, onCheckRoomCode, errorMsg } = useRoom();
+  const { onFetchRoomID, onConnectRoom, onSetCode, onCheckRoomCode, errorMessage, onSetErrorMessage } = useRoom();
   const { code } = useParams();
 
   const handleChangeInput = e => {
@@ -86,9 +86,20 @@ function Join() {
 
   const handleSubmit = e => {
     e.preventDefault();
+    const trimedName = name.trim();
+
+    // 문자열 비어있으면 에러 메시지
+    if (trimedName.length <= 0) {
+      onSetErrorMessage('닉네임을 입력해주세요.');
+      setName('');
+      return;
+    }
+
     if (code) {
+      // code를 통해 접속했다면 onConnectRoom
       onConnectRoom(name, code);
     } else {
+      // 방을 생성하면서 접속했다면 onFetchRoomID
       onFetchRoomID(name);
     }
   }
@@ -106,9 +117,9 @@ function Join() {
         <Styled.Form onSubmit={handleSubmit}>
           <Logo />
           {
-            errorMsg &&
+            errorMessage &&
             <Styled.ErrorMsg>
-              { errorMsg }
+              { errorMessage }
             </Styled.ErrorMsg>
           }
           <Styled.Input

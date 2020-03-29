@@ -5,6 +5,8 @@ export const UPLOAD_IMAGE_FAILURE = 'imageUpload/UPLOAD_IMAGE_FAILURE';
 
 export const INIT_IMAGE = 'imageUpload/INIT_IMAGE';
 
+export const SET_NOW_PAGE = 'imageUpload/SET_NOW_PAGE';
+
 // action
 export const uploadImage = (name, code, image) => ({
   type: UPLOAD_IMAGE,
@@ -27,10 +29,17 @@ export const initImage = () => ({
   type: INIT_IMAGE,
 });
 
+export const setNowPage = (page) => ({
+  type: SET_NOW_PAGE,
+  payload: page,
+});
+
 const initialState = {
+  nowPage: 'upload',
   encodedImg: null,
   answer: null,
   status: 'ready',
+  error: false,
   possibles: null,
 }
 
@@ -41,6 +50,9 @@ function imageUpload(state = initialState, { type, payload }) {
       return {
         ...state,
         status: 'uploading',
+        nowPage: 'auto',
+        error: false,
+        errorMessage: '',
       };
 
     case UPLOAD_IMAGE_SUCCESS: 
@@ -48,26 +60,32 @@ function imageUpload(state = initialState, { type, payload }) {
         ...state,
         ...payload.data,
         status: 'uploaded',
-        message: '',
+        nowPage: 'auto',
+        error: false,
+        errorMessage: '',
       };
 
     case UPLOAD_IMAGE_FAILURE:
       return {
         ...state,
-        ...payload.response.data,
-        status: 'ready',
-        encodedImg: null,
-        answer: null,
-        possibles: null,
+        error: true,
+        errorMessage: payload.response.data.message,
       };
     
     case INIT_IMAGE:
       return {
         ...state,
+        nowPage: 'upload',
         status: 'ready',
         encodedImg: null,
         answer: null,
         possibles: null,
+      }
+
+    case SET_NOW_PAGE:
+      return {
+        ...state,
+        nowPage: payload,
       }
 
     default:

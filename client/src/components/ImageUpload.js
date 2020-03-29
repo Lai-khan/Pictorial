@@ -108,7 +108,9 @@ const Styled = {
     font-weight: 800;
     font-family: inherit;
     margin-top: 45px;
-    cursor: pointer;
+    cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+    -webkit-filter: ${props => props.disabled && 'grayscale(100%)'};
+    filter: ${props => props.disabled && 'gray'};
   `,
   InputFile: styled.input`
     position: absolute;
@@ -176,33 +178,46 @@ const Styled = {
     font-size: 24px;
     color: white;
   `,
+  ErrorMsg: styled.div`
+    color: red;
+    text-align: center;
+    margin-bottom: 10px;
+  `, 
+  FlexHorizontalBox: styled.div`
+    display: flex;
+    justify-content: center;
+    flex-direction: left;
+
+    & button {
+      margin-left: 10px;
+      margin-right: 10px;
+    }
+  ` 
 }
 
 function ImageUpload() {
-  const [nowPage, setNowPage] = useState('upload');
-
-  const [imgBase64, setImgBase64] = useState('');
-  const [imgFile, setImgFile] = useState(null);
   const [nowCount, setNowCount] = useState(1);
   const [readyToGame, setReadyToGame] = useState(false);
 
   const { name, code, connected, round } = useRoom();
-  const { onUploadImage, onInitImage, encodedImg, answer, status } = useImageUpload();
+  const { onUploadImage, onInitImage, onSetNowPage, 
+    encodedImg, answer, status, nowPage, errorMessage } = useImageUpload();
 
   const handleChangeFile = (e) => {
     const reader = new FileReader();
 
-    reader.onloadend = () => {
-      const base64 = reader.result;
-      if (base64) {
-        setImgBase64(base64.toString());
-      }
-    }
     if (e.target.files[0]) {
+      onInitImage();
       reader.readAsDataURL(e.target.files[0]);
-      setImgFile(e.target.files[0]);
       onUploadImage(name, code, e.target.files[0]);
-      setNowPage('auto');
+      onSetNowPage('auto');
+    }
+  }
+
+  const handleReset = (e) => {
+    e.preventDefault();
+    if (status === 'uploaded' && answer) {
+      onInitImage();
     }
   }
 
@@ -213,15 +228,31 @@ function ImageUpload() {
         setReadyToGame(true);
       } else {
         onInitImage();
-        setNowPage('upload');
+        onSetNowPage('upload');
         setNowCount(nowCount + 1);
       }
     }
-    // onUploadImage(name, code, imgFile);
   }
 
   const handleClickChangePage = (menu) => {
-    setNowPage(menu);
+    // 현재 업로드하는 중이면 다른 메뉴 선택 불가
+    // TODO: 이미지 업로드 도중에 선택했을 경우 API CALL BLOCK 할 것
+    if (status === 'uploading') return;
+
+    // 이미지가 업로드 된 것이 없으면 다른 메뉴 선택 불가
+    if (status === 'ready') return;
+
+    // 사진 등록 화면으로 다시 갈 때 이미지 정보 초기화 
+    if (menu === 'upload') {
+      // onInitImage();
+    }
+
+    if (menu === 'manual') {
+      alert('수동출제는 준비 중입니다.');
+      return;
+    }
+    
+    onSetNowPage(menu);
   }
 
 
@@ -240,19 +271,21 @@ function ImageUpload() {
           {nowCount} / {round}
         </Styled.Count>
         <Styled.UploadBoxContainer>
+          <Styled.ErrorMsg>
+            { errorMessage }
+          </Styled.ErrorMsg>
           {
             nowPage === 'upload' &&
             <Styled.InputFile type="file" id="image" name="IMG_FILE" accept="image/*" onChange={handleChangeFile}/>
           }
-          <Styled.UploadBox image={`data:image/jpeg;base64,${encodedImg}`} htmlFor={"image"} selected={nowPage}>
+          <Styled.UploadBox image={nowPage !== 'upload' && `data:image/jpeg;base64,${encodedImg}`} htmlFor={"image"} selected={nowPage}>
             {
-              status === 'uploaded' && nowPage === 'auto' &&
+              answer && nowPage === 'auto' &&
               <Styled.AreaBox x1={answer.detection_boxes[0]} y1={answer.detection_boxes[1]} x2={answer.detection_boxes[2]} y2={answer.detection_boxes[3]}>
                 <Styled.AreaBoxLabel>{answer.detection_names}</Styled.AreaBoxLabel>
               </Styled.AreaBox>
             }
-            
-            <Styled.UploadBoxInstruction show={status === 'ready' ? false : true}>
+            <Styled.UploadBoxInstruction show={nowPage === 'upload' ? false : true}>
               <Plus />
               Upload Image
             </Styled.UploadBoxInstruction>
@@ -270,9 +303,14 @@ function ImageUpload() {
             <Styled.UploadBoxMenu onClick={() => handleClickChangePage('manual')} selected={nowPage === 'manual'}>수동출제</Styled.UploadBoxMenu>
           </Styled.UploadBoxMenuContainer>
         </Styled.UploadBoxContainer>
-        <Styled.Button>
-          제출하기
-        </Styled.Button>
+        <Styled.FlexHorizontalBox>
+          <Styled.Button type="button" disabled={status !== 'uploaded' && true} onClick={handleReset}>
+            다시 올리기
+          </Styled.Button>
+          <Styled.Button disabled={status !== 'uploaded' && true}>
+            제출하기
+          </Styled.Button>
+        </Styled.FlexHorizontalBox>
       </Styled.FormContainer>
     </Styled.Container>
   )
