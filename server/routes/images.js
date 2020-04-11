@@ -16,6 +16,8 @@ var saveLab= require('../lib/saveLab')              // save data to database
 
 var getAnswerList = require('../lib/db').getAnswerList; // query room problem and answers
 
+var cancelImage = require('../lib/db').cancelImage;
+
 /* variables */
 // upload version 1
 /* var upload = multer({dest: './public/images'}); */
@@ -78,5 +80,14 @@ router.get('/ready',
     res.status(200).json({answerList : result});
   } 
 ); 
+
+/* 다시올리기 클릭시 최근에 업로드한 이미지 삭제 */
+router.post('/cancel',
+  async (req, res, next) => {
+    console.log('image cancel is called!');
+    const result = await cancelImage(req.body.name, req.body.roomCode);
+    res.status(200).json({text: 'success!'});
+  }
+);
 
 module.exports = router;

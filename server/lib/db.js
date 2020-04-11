@@ -172,4 +172,10 @@ const resetUserCorrect = async (roomCode) => {
     return result;
 }
 
-module.exports = { findRoom, addRoom, addUser, findUser, getUsersInRoom, getReadyUsersInRoom, setRoom, getRoomSetting, setUserScore, getUserScore, deleteRoom, deleteUser, insertImg, isGameStart, dbUpdateLabel, setUserReady, setGameStart, getAnswerList, changeProfile, setUserimageDownload, getImageDownloadUsersInRoom, setRoundStart, getRoundStart, resetRoom, resetUserCorrect };
+const cancelImage = async (name, roomCode) => {
+    const result = await ImageInfo.destroy( {limit: 1, where: {name: name, roomCode: roomCode} , order: [['id', 'DESC']] } );
+    console.log(result);
+    return result;
+}
+
+module.exports = { findRoom, addRoom, addUser, findUser, getUsersInRoom, getReadyUsersInRoom, setRoom, getRoomSetting, setUserScore, getUserScore, deleteRoom, deleteUser, insertImg, isGameStart, dbUpdateLabel, setUserReady, setGameStart, getAnswerList, changeProfile, setUserimageDownload, getImageDownloadUsersInRoom, setRoundStart, getRoundStart, resetRoom, resetUserCorrect, cancelImage };
