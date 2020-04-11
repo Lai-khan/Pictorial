@@ -80,7 +80,19 @@ const getAnswerList = async (roomCode) => {
         };
         answerList.push(object);
     }
-    return answerList;
+    answerList.sort((a, b) => {
+        return a.name < b.name ? -1 : a.name > b.name ? 1 : 0
+    });
+    const room = await getRoomSetting(roomCode);
+    const round = room.dataValues.round;
+    const users = await getUsersInRoom(roomCode);
+    let sortedAnswerList = [];
+    for(var i=0; i<round; i++) {
+        for(var j=0; j<users.length; j++) {
+            sortedAnswerList.push(answerList[i+j*round]);
+        }
+    }
+    return sortedAnswerList;
 }
 
 const deleteRoom = async (roomCode) => {
