@@ -56,3 +56,12 @@ export async function imageReadyRequest(code) {
     throw error;
   }
 }
+
+export async function reuploadRequest(payload) {
+  try {
+    const response = await axios.post(`${END_POINT}/images/cancel`, { name: payload.name, roomCode: payload.code });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+}

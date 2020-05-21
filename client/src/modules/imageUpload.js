@@ -5,6 +5,10 @@ export const UPLOAD_IMAGE_FAILURE = 'imageUpload/UPLOAD_IMAGE_FAILURE';
 
 export const INIT_IMAGE = 'imageUpload/INIT_IMAGE';
 
+export const REUPLOAD_REQUEST = 'imageUpload/REUPLOAD_REQUEST';
+export const REUPLOAD_SUCCESS = 'imageUpload/REUPLOAD_SUCCESS';
+export const REUPLOAD_FAILURE = 'imageUpload/REUPLOAD_FAILURE';
+
 export const SET_NOW_PAGE = 'imageUpload/SET_NOW_PAGE';
 
 // action
@@ -27,6 +31,10 @@ export const uploadImageFailure = (response) => ({
 
 export const initImage = () => ({
   type: INIT_IMAGE,
+});
+
+export const reuploadRequest = () => ({
+  type: REUPLOAD_REQUEST,
 });
 
 export const setNowPage = (page) => ({
