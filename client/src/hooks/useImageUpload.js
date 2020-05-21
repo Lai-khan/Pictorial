@@ -1,6 +1,6 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { useCallback } from 'react';
-import { uploadImage, initImage, setNowPage } from '../modules/imageUpload'
+import { uploadImage, initImage, setNowPage, reuploadRequest } from '../modules/imageUpload'
 
 export default function useImageUpload() {
   const nowPage = useSelector((state) => state.imageUpload.nowPage);
@@ -25,10 +25,15 @@ export default function useImageUpload() {
   const onSetNowPage = useCallback(
     (page) => dispatch(setNowPage(page)),
     [dispatch]
+  );
+
+  const onReuploadRequest = useCallback(
+    () => dispatch(reuploadRequest()),
+    [dispatch]
   )
 
   return {
     nowPage, encodedImg, answer, status, possibles, error, errorMessage,
-    onUploadImage, onInitImage, onSetNowPage,
+    onUploadImage, onInitImage, onSetNowPage, onReuploadRequest,
   };
 }

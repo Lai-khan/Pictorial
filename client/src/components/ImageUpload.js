@@ -200,7 +200,7 @@ function ImageUpload() {
   const [readyToGame, setReadyToGame] = useState(false);
 
   const { name, code, connected, round } = useRoom();
-  const { onUploadImage, onInitImage, onSetNowPage, 
+  const { onUploadImage, onInitImage, onSetNowPage, onReuploadRequest,
     encodedImg, answer, status, nowPage, errorMessage } = useImageUpload();
 
   const handleChangeFile = (e) => {
@@ -218,6 +218,7 @@ function ImageUpload() {
     e.preventDefault();
     if (status === 'uploaded' && answer) {
       onInitImage();
+      onReuploadRequest();
     }
   }
 
