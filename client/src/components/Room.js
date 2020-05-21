@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams, Redirect } from 'react-router-dom';
 import styled from 'styled-components';
 import useRoom from '../hooks/useRoom';
+import { clientURL } from '../libs/setting';
 
 import Stars from '../svgs/Stars.svg';
 import Circle from '../svgs/circle.svg';
@@ -193,7 +194,8 @@ function Room() {
     onSetRound, onSetTimeLimit, onSetGameStart, onSetProfile } = useRoom();
 
   const handleLinkShare = () => {
-    const url = `https://pictorial.surge.sh/${code}`;
+    // const url = `https://pictorial-client.web.app/${code}`;
+    const url = clientURL;
     const textareaElement = document.createElement('textarea');
     textareaElement.value = url;
     document.body.appendChild(textareaElement);
