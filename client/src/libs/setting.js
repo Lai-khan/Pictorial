@@ -1,1 +1,1 @@
-export const clientURL = `https://pictorial-client.web.app/${code}`;
+export const clientURL = code => `https://pictorial-client.web.app/${code}`;

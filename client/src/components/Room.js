@@ -195,7 +195,7 @@ function Room() {
 
   const handleLinkShare = () => {
     // const url = `https://pictorial-client.web.app/${code}`;
-    const url = clientURL;
+    const url = clientURL(code);
     const textareaElement = document.createElement('textarea');
     textareaElement.value = url;
     document.body.appendChild(textareaElement);
